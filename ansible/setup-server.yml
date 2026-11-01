@@ -1,0 +1,39 @@
+---
+# One-time server preparation: installs Docker on a fresh Ubuntu EC2 instance.
+# Run manually:  ansible-playbook -i inventory.ini setup-server.yml --private-key ~/devops-key.pem
+- name: Prepare app server (install Docker)
+  hosts: app_servers
+  become: true
+
+  tasks:
+    - name: Install prerequisite packages
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - python3-pip
+        state: present
+        update_cache: true
+
+    - name: Install Docker engine
+      ansible.builtin.apt:
+        name:
+          - docker.io
+        state: present
+
+    - name: Ensure Docker is enabled and running
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Allow the ubuntu user to run docker
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true
+
+    - name: Install Docker SDK for Python (needed by community.docker modules)
+      ansible.builtin.apt:
+        name: python3-docker
+        state: present

@@ -1,0 +1,8 @@
+# For MANUAL runs only: copy to inventory.ini and put your app EC2 server's public/Elastic IP.
+# (inventory.ini is git-ignored. The Jenkins pipeline generates its own inventory at runtime
+#  from the 'app-server-ip' credential.)
+[app_servers]
+app1 ansible_host=EC2_PUBLIC_IP
+
+[app_servers:vars]
+ansible_user=ubuntu

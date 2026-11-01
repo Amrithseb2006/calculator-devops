@@ -1,0 +1,11 @@
+target/
+*.class
+*.log
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# never commit secrets / keys
+*.pem
+ansible/inventory.ini

@@ -1,0 +1,51 @@
+---
+# Called by Jenkins on every successful build.
+# Manual run:
+#   ansible-playbook -i inventory.ini deploy.yml --private-key ~/devops-key.pem \
+#     -e image_name=youruser/devops-demo -e image_tag=latest
+- name: Deploy devops-demo container
+  hosts: app_servers
+  become: true
+
+  vars:
+    image_name: "your-dockerhub-username/devops-demo"
+    image_tag: "latest"
+    container_name: devops-demo
+    host_port: 80
+    container_port: 8080
+
+  tasks:
+    - name: Pull the new image
+      community.docker.docker_image:
+        name: "{{ image_name }}:{{ image_tag }}"
+        source: pull
+        force_source: true
+
+    - name: Run (or replace) the application container
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        image: "{{ image_name }}:{{ image_tag }}"
+        state: started
+        recreate: true
+        restart_policy: unless-stopped
+        published_ports:
+          - "{{ host_port }}:{{ container_port }}"
+        env:
+          APP_VERSION: "{{ image_tag }}"
+
+    - name: Wait until the app answers on /health
+      ansible.builtin.uri:
+        url: "http://localhost:{{ host_port }}/health"
+        status_code: 200
+      register: health
+      retries: 12
+      delay: 5
+      until: health.status == 200
+
+    - name: Show health result
+      ansible.builtin.debug:
+        msg: "Deployed {{ image_name }}:{{ image_tag }} -> {{ health.content }}"
+
+    - name: Remove dangling images to save disk
+      community.docker.docker_prune:
+        images: true
