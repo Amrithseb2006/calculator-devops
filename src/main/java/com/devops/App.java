@@ -19,6 +19,7 @@ import java.util.Map;
  *   GET /health      -> {"status":"UP"} (used by Docker HEALTHCHECK and Ansible)
  *   GET /add?a=1&b=2 -> {"result":3}
  *   GET /multiply?a=3&b=4
+ *   GET /subtract?a=8&b=3 -> {"result":5}
  *   GET /divide?a=10&b=4
  */
 public class App {
@@ -35,12 +36,17 @@ public class App {
 
     static HttpServer createServer(int port) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+
         server.createContext("/", ex -> respond(ex, 200,
-                "{\"app\":\"devops-demo\",\"version\":\"" + VERSION + "\",\"message\":\"Hello from the CI/CD pipeline!\"}"));
+                "{\"app\":\"devops-demo\",\"version\":\"" + VERSION
+                        + "\",\"message\":\"CI/CD deployment updated: subtraction is now available!\"}"));
+
         server.createContext("/health", ex -> respond(ex, 200, "{\"status\":\"UP\"}"));
         server.createContext("/add", ex -> calc(ex, "add"));
         server.createContext("/multiply", ex -> calc(ex, "multiply"));
+        server.createContext("/subtract", ex -> calc(ex, "subtract"));
         server.createContext("/divide", ex -> calc(ex, "divide"));
+
         return server;
     }
 
@@ -49,13 +55,26 @@ public class App {
             Map<String, String> q = parseQuery(ex.getRequestURI().getRawQuery());
             int a = Integer.parseInt(q.get("a"));
             int b = Integer.parseInt(q.get("b"));
+
             String result;
+
             switch (op) {
-                case "add":      result = String.valueOf(CALC.add(a, b)); break;
-                case "multiply": result = String.valueOf(CALC.multiply(a, b)); break;
-                default:         result = String.valueOf(CALC.divide(a, b)); break;
+                case "add":
+                    result = String.valueOf(CALC.add(a, b));
+                    break;
+                case "multiply":
+                    result = String.valueOf(CALC.multiply(a, b));
+                    break;
+                case "subtract":
+                    result = String.valueOf(CALC.subtract(a, b));
+                    break;
+                default:
+                    result = String.valueOf(CALC.divide(a, b));
+                    break;
             }
+
             respond(ex, 200, "{\"result\":" + result + "}");
+
         } catch (NumberFormatException | NullPointerException e) {
             respond(ex, 400, "{\"error\":\"query params a and b must be integers\"}");
         } catch (IllegalArgumentException e) {
@@ -65,22 +84,28 @@ public class App {
 
     static Map<String, String> parseQuery(String raw) {
         Map<String, String> map = new HashMap<>();
+
         if (raw == null || raw.isEmpty()) {
             return map;
         }
+
         for (String pair : raw.split("&")) {
             String[] kv = pair.split("=", 2);
+
             if (kv.length == 2) {
                 map.put(kv[0], kv[1]);
             }
         }
+
         return map;
     }
 
     private static void respond(HttpExchange ex, int status, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+
         ex.getResponseHeaders().set("Content-Type", "application/json");
         ex.sendResponseHeaders(status, bytes.length);
+
         try (OutputStream os = ex.getResponseBody()) {
             os.write(bytes);
         }
