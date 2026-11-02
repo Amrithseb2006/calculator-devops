@@ -44,10 +44,16 @@ class AppTest {
     }
 
     @Test
-    void rootReturnsGreeting() throws Exception {
+    void rootReturnsCalculatorUI() throws Exception {
         HttpResponse<String> r = get("/");
+
         assertEquals(200, r.statusCode());
-        assertTrue(r.body().contains("devops-demo"));
+        assertTrue(r.headers()
+                .firstValue("Content-Type")
+                .orElse("")
+                .contains("text/html"));
+        assertTrue(r.body().contains("<html"));
+        assertTrue(r.body().contains("Calculator"));
     }
 
     @Test
