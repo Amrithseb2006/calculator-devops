@@ -2,9 +2,9 @@
 FROM eclipse-temurin:17-jre-alpine
 
 
-LABEL
-      version="2.0.0" \
+LABEL version="2.0.0" \
       description="DevOps Demo Java Application"
+      
 
 # Run as a non-root user
 RUN addgroup -S app && adduser -S app -G app
