@@ -2,7 +2,7 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: calculator-cluster
+  name: calculator-cluster-new
   region: ap-south-2
 
 managedNodeGroups:

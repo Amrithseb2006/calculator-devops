@@ -11,7 +11,7 @@ permissions:
 
 env:
   AWS_REGION: ap-south-2
-  EKS_CLUSTER: calculator-cluster
+  EKS_CLUSTER: calculator-cluster-new
   DOCKER_IMAGE: amrithseb2006/devops-demo
 
 jobs:
